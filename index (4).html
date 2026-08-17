@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PontoPro - Controle de Ponto & Banco de Horas</title>
+    <!-- Tailwind CSS para Estilização Premium -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .glass-panel {
+            background: rgba(22, 28, 45, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .cyber-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+        /* Custom scrollbar for elegant history list */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(22, 28, 45, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-gray-100 font-sans min-h-screen antialiased selection:bg-blue-500 selection:text-white">
+
+    <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+        
+        <!-- HEADER PRINCIPAL -->
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between p-6 glass-panel rounded-2xl cyber-glow gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">PontoPro</h1>
+                    <p class="text-xs text-gray-400">Sistema Premium de Gestão Horária e Financeira</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Status Badge -->
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-full border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Local & Seguro
+                </div>
+                
+                <!-- Relógio Digital -->
+                <div class="text-right">
+                    <div id="live-clock" class="text-2xl font-mono font-bold tracking-wider text-blue-400">00:00:00</div>
+                    <div id="live-date" class="text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">--/--/----</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- COLUNA DA ESQUERDA: CONTROLE & CONFIGURAÇÕES -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- REGISTRO DE BATIDA -->
+                <div class="p-6 glass-panel rounded-2xl space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-200 border-b border-gray-800 pb-2 flex items-center gap-2">
+                        <span>⚡ Registrar Ponto</span>
+                    </h2>
+                    
+                    <!-- Seleção de Tipo Integrada -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Tipo de Registro</label>
+                        <div class="grid grid-cols-2 gap-2" id="type-selector-group">
+                            <button onclick="selectType('Entrada')" id="btn-type-Entrada" class="type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-blue-600/20 border-blue-500 text-blue-300">
+                                Entrada
+                            </button>
+                            <button onclick="selectType('Saída Almoço')" id="btn-type-Saída Almoço" class="type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-slate-800/40 border-gray-800 text-gray-400 hover:border-gray-700">
+                                Saída Almoço
+                            </button>
+                            <button onclick="selectType('Retorno Almoço')" id="btn-type-Retorno Almoço" class="type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-slate-800/40 border-gray-800 text-gray-400 hover:border-gray-700">
+                                Retorno Almoço
+                            </button>
+                            <button onclick="selectType('Fim de Jornada')" id="btn-type-Fim de Jornada" class="type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-slate-800/40 border-gray-800 text-gray-400 hover:border-gray-700">
+                                Fim de Jornada
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ajuste Manual Opcional -->
+                    <div class="pt-2 border-t border-gray-800/60">
+                        <label class="inline-flex items-center cursor-pointer gap-2">
+                            <input type="checkbox" id="toggle-manual" class="rounded bg-slate-900 border-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900" onchange="toggleManualInputs()">
+                            <span class="text-xs font-medium text-gray-400">Alterar Data/Hora Manual</span>
+                        </label>
+                        
+                        <div id="manual-inputs" class="hidden mt-3 grid grid-cols-2 gap-2 p-3 bg-slate-900/60 rounded-xl border border-gray-800">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Data</label>
+                                <input type="date" id="manual-date" class="w-full bg-slate-950 border border-gray-800 rounded-lg p-2 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Hora (com seg)</label>
+                                <input type="time" step="1" id="manual-time" class="w-full bg-slate-950 border border-gray-800 rounded-lg p-2 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Justificativa / Observação -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Observação / Justificativa</label>
+                        <input type="text" id="record-note" placeholder="Ex: Home office, Visita externa, etc." class="w-full bg-slate-900/80 border border-gray-800 rounded-xl p-2.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 placeholder-gray-600">
+                    </div>
+
+                    <!-- Botão de Ação -->
+                    <button onclick="registerPunch()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-[0.99] mt-2 cursor-pointer">
+                        Confirmar Batida de Ponto
+                    </button>
+                </div>
+
+                <!-- CONFIGURAÇÕES TRABALHISTAS -->
+                <details class="p-6 glass-panel rounded-2xl group" open>
+                    <summary class="list-none flex items-center justify-between cursor-pointer font-semibold text-gray-200 border-b border-gray-800 pb-2">
+                        <span class="flex items-center gap-2">⚙️ Configurações de Cálculo</span>
+                        <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </summary>
+                    <div class="mt-4 space-y-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-medium text-gray-400 mb-1">Salário Base (R$)</label>
+                            <input type="number" id="cfg-salary" value="1660.00" step="0.01" oninput="updateCalculations()" class="w-full bg-slate-900 border border-gray-800 rounded-lg p-2 text-gray-200 focus:outline-none focus:border-blue-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-gray-400 mb-1">Carga Horária Mensal (Horas)</label>
+                            <input type="number" id="cfg-monthly-hours" value="220" oninput="updateCalculations()" class="w-full bg-slate-900 border border-gray-800 rounded-lg p-2 text-gray-200 focus:outline-none focus:border-blue-500 font-mono">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-400 mb-1">HE Semana (%)</label>
+                                <input type="number" id="cfg-he-week" value="50" oninput="updateCalculations()" class="w-full bg-slate-900 border border-gray-800 rounded-lg p-2 text-gray-200 focus:outline-none focus:border-blue-500 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-400 mb-1">HE Fim de Semana (%)</label>
+                                <input type="number" id="cfg-he-weekend" value="100" oninput="updateCalculations()" class="w-full bg-slate-900 border border-gray-800 rounded-lg p-2 text-gray-200 focus:outline-none focus:border-blue-500 font-mono">
+                            </div>
+                        </div>
+                        
+                        <!-- Resumo dos Valores-Hora Calculados -->
+                        <div class="mt-4 p-3 bg-slate-950/80 rounded-xl border border-gray-800/80 space-y-1.5 font-mono text-[11px]">
+                            <div class="flex justify-between text-gray-400">
+                                <span>Hora Comum:</span>
+                                <span class="text-gray-200" id="calc-val-normal">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-400">
+                                <span>Hora Extra (50%):</span>
+                                <span class="text-blue-400" id="calc-val-he50">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-400">
+                                <span>Hora Extra (100%):</span>
+                                <span class="text-indigo-400" id="calc-val-he100">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+
+            <!-- COLUNA DA DIREITA: DASHBOARD & HISTÓRICO -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- PAINEL DE CONTROLE DE HORAS / FINANCEIRO -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- CARD SALDO HORAS EXTRAS -->
+                    <div class="p-5 glass-panel rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Extra Acumulado</p>
+                            <h3 class="text-2xl font-bold font-mono text-emerald-400 mt-1" id="dash-total-extra">00:00:00</h3>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-2">Soma de todas as horas excedentes</p>
+                    </div>
+
+                    <!-- CARD GANHOS EM DINHEIRO -->
+                    <div class="p-5 glass-panel rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px] border-l-2 border-l-emerald-500">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Valor Adicional a Receber</p>
+                            <h3 class="text-2xl font-bold font-mono text-emerald-400 mt-1" id="dash-total-money">R$ 0,00</h3>
+                        </div>
+                        <p class="text-[11px] text-gray-400" id="dash-extra-details">0h da semana / 0h fim de semana</p>
+                    </div>
+
+                    <!-- CARD JORNADA DO DIA CORRENTE -->
+                    <div class="p-5 glass-panel rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trabalhado Hoje</p>
+                                <span id="dash-today-status" class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-gray-800 text-gray-400">Inativo</span>
+                            </div>
+                            <h3 class="text-2xl font-bold font-mono text-blue-400 mt-1" id="dash-today-worked">00:00:00</h3>
+                        </div>
+                        <!-- Carga Horária diária Progress bar -->
+                        <div class="w-full mt-2">
+                            <div class="flex justify-between text-[10px] text-gray-500 font-mono mb-1">
+                                <span>Progresso Diário (Meta 08h)</span>
+                                <span id="dash-today-percent">0%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                <div id="dash-today-progress-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTÓRICO DE MARCAÇÕES -->
+                <div class="p-6 glass-panel rounded-2xl space-y-4 flex flex-col flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-800 pb-3">
+                        <h2 class="text-lg font-semibold text-gray-200 flex items-center gap-2">
+                            <span>📋 Histórico de Batidas</span>
+                        </h2>
+                        
+                        <!-- Barra de Ferramentas / Filtros -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="date" id="filter-date" onchange="renderHistory()" class="bg-slate-900 border border-gray-800 rounded-lg p-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+                            
+                            <button onclick="clearFilter()" id="btn-clear-filter" class="hidden px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-lg transition-all cursor-pointer">
+                                Limpar Filtro
+                            </button>
+
+                            <button onclick="exportToCSV()" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 cursor-pointer">
+                                📥 Exportar Excel/CSV
+                            </button>
+                            
+                            <button onclick="clearAllHistory()" class="px-2.5 py-1.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-all cursor-pointer" title="Limpar todo o histórico de pontos">
+                                Limpar Tudo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- LISTAGEM DOS CARDS DE PONTO -->
+                    <div id="history-container" class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+                        <!-- Gerado Dinamicamente -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT: INTELIGÊNCIA DO SISTEMA -->
+    <script>
+        // Configuração global de estado
+        let selectedType = 'Entrada';
+        let records = JSON.parse(localStorage.getItem('pontopro_records')) || [];
+        
+        // Parâmetros de cálculo financeiro
+        let config = {
+            salary: 1660.00,
+            monthlyHours: 220,
+            heWeek: 50,
+            heWeekend: 100
+        };
+
+        // Carrega configurações anteriores salvas, se houver
+        if(localStorage.getItem('pontopro_config')) {
+            config = JSON.parse(localStorage.getItem('pontopro_config'));
+            document.getElementById('cfg-salary').value = config.salary;
+            document.getElementById('cfg-monthly-hours').value = config.monthlyHours;
+            document.getElementById('cfg-he-week').value = config.heWeek;
+            document.getElementById('cfg-he-weekend').value = config.heWeekend;
+        }
+
+        // Inicializador do Relógio
+        function initClock() {
+            setInterval(() => {
+                const now = new Date();
+                
+                // Relógio
+                document.getElementById('live-clock').innerText = now.toLocaleTimeString('pt-BR');
+                
+                // Data formatada elegante
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                document.getElementById('live-date').innerText = now.toLocaleDateString('pt-BR', options).replace('.', '');
+            }, 1000);
+        }
+
+        // Exibe ou oculta os inputs manuais
+        function toggleManualInputs() {
+            const isChecked = document.getElementById('toggle-manual').checked;
+            const container = document.getElementById('manual-inputs');
+            if (isChecked) {
+                container.classList.remove('hidden');
+                // Auto preenche com a data/hora atual por conveniência
+                const now = new Date();
+                document.getElementById('manual-date').value = now.toISOString().split('T')[0];
+                document.getElementById('manual-time').value = now.toTimeString().split(' ')[0];
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        // Selecionador de tipo de batida
+        function selectType(type) {
+            selectedType = type;
+            // Atualiza botões visualmente
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.className = "type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-slate-800/40 border-gray-800 text-gray-400 hover:border-gray-700";
+            });
+            const activeBtn = document.getElementById(`btn-type-${type}`);
+            if(activeBtn) {
+                activeBtn.className = "type-btn p-2.5 rounded-xl border text-xs font-medium transition-all text-center bg-blue-600/20 border-blue-500 text-blue-300";
+            }
+        }
+
+        // Atualiza a pré-visualização das taxas de cálculo na tela
+        function updateCalculations() {
+            config.salary = parseFloat(document.getElementById('cfg-salary').value) || 0;
+            config.monthlyHours = parseFloat(document.getElementById('cfg-monthly-hours').value) || 1;
+            config.heWeek = parseFloat(document.getElementById('cfg-he-week').value) || 0;
+            config.heWeekend = parseFloat(document.getElementById('cfg-he-weekend').value) || 0;
+            
+            // Salva configurações
+            localStorage.setItem('pontopro_config', JSON.stringify(config));
+
+            // Valores por hora
+            const normalHourValue = config.salary / config.monthlyHours;
+            const he50Value = normalHourValue * (1 + (config.heWeek / 100));
+            const he100Value = normalHourValue * (1 + (config.heWeekend / 100));
+
+            document.getElementById('calc-val-normal').innerText = `R$ ${normalHourValue.toFixed(2).replace('.', ',')}`;
+            document.getElementById('calc-val-he50').innerText = `R$ ${he50Value.toFixed(2).replace('.', ',')}`;
+            document.getElementById('calc-val-he100').innerText = `R$ ${he100Value.toFixed(2).replace('.', ',')}`;
+
+            // Recalcula totais do Dashboard baseado nas novas regras trabalhistas
+            recalculateDashboard();
+        }
+
+        // Ação Principal: Registrar a Batida
+        function registerPunch() {
+            const isManual = document.getElementById('toggle-manual').checked;
+            let recordTimestamp;
+
+            if (isManual) {
+                const inputDate = document.getElementById('manual-date').value;
+                const inputTime = document.getElementById('manual-time').value;
+                if (!inputDate || !inputTime) {
+                    alert("Por favor, preencha a data e a hora corretas para o lançamento manual.");
+                    return;
+                }
+                recordTimestamp = new Date(`${inputDate}T${inputTime}`).getTime();
+            } else {
+                recordTimestamp = new Date().getTime();
+            }
+
+            const note = document.getElementById('record-note').value.trim();
+
+            const newRecord = {
+                id: 'id_' + Math.random().toString(36).substr(2, 9),
+                timestamp: recordTimestamp,
+                type: selectedType,
+                note: note
+            };
+
+            records.push(newRecord);
+            // Ordena histórico por tempo (mais recente no topo)
+            records.sort((a, b) => b.timestamp - a.timestamp);
+            
+            // Grava persistência
+            localStorage.setItem('pontopro_records', JSON.stringify(records));
+            
+            // Reseta formulários
+            document.getElementById('record-note').value = '';
+            
+            // Auto sugestão de próximo tipo inteligente para guiar o fluxo
+            autoSuggestNextType();
+            
+            // Atualiza visual
+            renderHistory();
+            recalculateDashboard();
+        }
+
+        // Sugere o próximo botão de forma inteligente com base no histórico recente
+        function autoSuggestNextType() {
+            if (records.length === 0) {
+                selectType('Entrada');
+                return;
+            }
+            const lastType = records[0].type; // Primeiro elemento por causa da ordenação decrescente
+            if (lastType === 'Entrada') selectType('Saída Almoço');
+            else if (lastType === 'Saída Almoço') selectType('Retorno Almoço');
+            else if (lastType === 'Retorno Almoço') selectType('Fim de Jornada');
+            else selectType('Entrada');
+        }
+
+        // Deleta um registro específico
+        function deleteRecord(id) {
+            if(confirm("Deseja realmente excluir esta marcação de ponto?")) {
+                records = records.filter(rec => rec.id !== id);
+                localStorage.setItem('pontopro_records', JSON.stringify(records));
+                renderHistory();
+                recalculateDashboard();
+            }
+        }
+
+        // Limpa tudo
+        function clearAllHistory() {
+            if(confirm("⚠️ ATENÇÃO: Isso apagará PERMANENTEMENTE todos os seus registros de ponto salvos. Deseja continuar?")) {
+                records = [];
+                localStorage.removeItem('pontopro_records');
+                renderHistory();
+                recalculateDashboard();
+            }
+        }
+
+        // Limpa Filtro de Data
+        function clearFilter() {
+            document.getElementById('filter-date').value = '';
+            document.getElementById('btn-clear-filter').classList.add('hidden');
+            renderHistory();
+        }
+
+        // Renderiza lista de histórico na tela
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            const filterDate = document.getElementById('filter-date').value;
+            container.innerHTML = '';
+
+            if (filterDate) {
+                document.getElementById('btn-clear-filter').classList.remove('hidden');
+            }
+
+            // Agrupa registros por dia para o cálculo das horas diárias
+            const filteredRecords = records.filter(rec => {
+                if (!filterDate) return true;
+                const recDateStr = new Date(rec.timestamp).toISOString().split('T')[0];
+                return recDateStr === filterDate;
+            });
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 border border-dashed border-gray-800 rounded-xl text-xs">
+                        Nenhum registro de ponto encontrado.
+                    </div>
+                `;
+                return;
+            }
+
+            filteredRecords.forEach(rec => {
+                const dateObj = new Date(rec.timestamp);
+                const formatDay = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const formatTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                // Descobre dia da semana
+                const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const weekdayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+
+                // Cores para etiquetas de tipos
+                let typeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                if (rec.type.includes('Almoço')) typeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                if (rec.type === 'Fim de Jornada') typeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+
+                const card = document.createElement('div');
+                card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-900/40 border border-gray-800/80 rounded-xl gap-3 hover:border-gray-700/60 transition-colors";
+                
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-center px-2.5 py-1 rounded-lg bg-slate-950 border border-gray-800 min-w-[55px]">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${weekdayLabel}</p>
+                            <p class="text-xs font-mono font-bold text-gray-300 mt-0.5">${formatDay.split('/')[0]}/${formatDay.split('/')[1]}</p>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-medium border ${typeColor}">${rec.type}</span>
+                                <span class="text-sm font-bold font-mono text-gray-200 tracking-wide">${formatTime}</span>
+                            </div>
+                            ${rec.note ? `<p class="text-[11px] text-gray-400 mt-1 italic flex items-center gap-1"><span>💬</span> ${rec.note}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-gray-800/60 pt-2 sm:pt-0">
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded ${isWeekend ? 'bg-indigo-500/10 text-indigo-400' : 'bg-blue-500/10 text-blue-400'}">
+                            HE: ${isWeekend ? config.heWeekend : config.heWeek}%
+                        </span>
+                        <button onclick="deleteRecord('${rec.id}')" class="text-gray-500 hover:text-red-400 text-xs p-1 rounded transition-colors cursor-pointer" title="Remover ponto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Auxiliar matemático para formatar milissegundos para string HH:MM:SS
+        function formatMsToTimeStr(ms) {
+            if (ms < 0) ms = 0;
+            const totalSecs = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSecs / 3600);
+            const minutes = Math.floor((totalSecs % 3600) / 60);
+            const seconds = totalSecs % 60;
+            return [hours, minutes, seconds].map(val => String(val).padStart(2, '0')).join(':');
+        }
+
+        // Lógica de Cálculo de Jornada Diária e Horas Extras Globais
+        function recalculateDashboard() {
+            const normalHourValue = config.salary / config.monthlyHours;
+            const he50Value = normalHourValue * (1 + (config.heWeek / 100));
+            const he100Value = normalHourValue * (1 + (config.heWeekend / 100));
+
+            // Agrupa pontos por data pura (YYYY-MM-DD) para processar as jornadas diárias completas
+            const dayGroups = {};
+            
+            // Clonamos e revertemos para processar cronologicamente do passado para o presente
+            const chronoRecords = [...records].reverse();
+
+            chronoRecords.forEach(rec => {
+                const dateStr = new Date(rec.timestamp).toISOString().split('T')[0];
+                if (!dayGroups[dateStr]) dayGroups[dateStr] = [];
+                dayGroups[dateStr].push(rec);
+            });
+
+            let totalExtraMs = 0;
+            let totalGanhosMonetarios = 0;
+            let totalHoursWeek = 0;
+            let totalHoursWeekend = 0;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            let todayWorkedMs = 0;
+            let todayIsActive = false;
+
+            // Meta diária padrão da CLT: 8 horas em milissegundos
+            const DAILY_GOAL_MS = 8 * 60 * 60 * 1000;
+
+            // Processa cada dia individualmente
+            for (const dateStr in dayGroups) {
+                const dayPunches = dayGroups[dateStr];
+                let dayWorkedMs = 0;
+                let lastEntradaTime = null;
+
+                // Ordena os pontos do dia de forma estrita para garantir pareamento entrada/saída
+                dayPunches.sort((a, b) => a.timestamp - b.timestamp);
+
+                dayPunches.forEach(punch => {
+                    if (punch.type === 'Entrada' || punch.type === 'Retorno Almoço') {
+                        lastEntradaTime = punch.timestamp;
+                        if (dateStr === todayStr) todayIsActive = true;
+                    } else if (punch.type === 'Saída Almoço' || punch.type === 'Fim de Jornada') {
+                        if (lastEntradaTime) {
+                            dayWorkedMs += (punch.timestamp - lastEntradaTime);
+                            lastEntradaTime = null;
+                        }
+                        if (punch.type === 'Fim de Jornada' && dateStr === todayStr) {
+                            todayIsActive = false;
+                        }
+                    }
+                });
+
+                // Se o ponto ainda está "aberto" (ex: bateu entrada e não saiu ainda) e é HOJE, adiciona o tempo vivo corrente
+                if (lastEntradaTime && dateStr === todayStr) {
+                    dayWorkedMs += (new Date().getTime() - lastEntradaTime);
+                }
+
+                if (dateStr === todayStr) {
+                    todayWorkedMs = dayWorkedMs;
+                }
+
+                // Cálculo do Saldo Extra (Excedente das 8h diárias)
+                if (dayWorkedMs > DAILY_GOAL_MS) {
+                    const extraMs = dayWorkedMs - DAILY_GOAL_MS;
+                    totalExtraMs += extraMs;
+
+                    const extraHoursFloat = extraMs / (1000 * 60 * 60);
+                    
+                    // Determina taxa baseada no dia da semana do ponto analisado
+                    const dayOfWeek = new Date(dayPunches[0].timestamp).getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                    if (isWeekend) {
+                        totalGanhosMonetarios += extraHoursFloat * he100Value;
+                        totalHoursWeekend += extraHoursFloat;
+                    } else {
+                        totalGanhosMonetarios += extraHoursFloat * he50Value;
+                        totalHoursWeek += extraHoursFloat;
+                    }
+                }
+            }
+
+            // Atualiza Widgets na tela
+            document.getElementById('dash-total-extra').innerText = formatMsToTimeStr(totalExtraMs);
+            document.getElementById('dash-total-money').innerText = `R$ ${totalGanhosMonetarios.toFixed(2).replace('.', ',')}`;
+            document.getElementById('dash-extra-details').innerText = `${totalHoursWeek.toFixed(1)}h de semana / ${totalHoursWeekend.toFixed(1)}h fim de semana`;
+
+            // Interface do dia de hoje
+            document.getElementById('dash-today-worked').innerText = formatMsToTimeStr(todayWorkedMs);
+            
+            const todayStatusWidget = document.getElementById('dash-today-status');
+            if (todayIsActive) {
+                todayStatusWidget.innerText = "Em Atividade";
+                todayStatusWidget.className = "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-emerald-500/20 text-emerald-400";
+            } else {
+                todayStatusWidget.innerText = "Inativo";
+                todayStatusWidget.className = "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-gray-800 text-gray-400";
+            }
+
+            // Barra de progresso meta de hoje
+            const percent = Math.min(100, Math.floor((todayWorkedMs / DAILY_GOAL_MS) * 100));
+            document.getElementById('dash-today-percent').innerText = `${percent}%`;
+            document.getElementById('dash-today-progress-bar').style.width = `${percent}%`;
+            
+            // Muda cor se bater a meta
+            if(percent >= 100) {
+                document.getElementById('dash-today-progress-bar').className = "h-full bg-emerald-500 transition-all duration-500";
+            } else {
+                document.getElementById('dash-today-progress-bar').className = "h-full bg-blue-500 transition-all duration-500";
+            }
+        }
+
+        // Exportador estruturado de Relatórios para Excel / CSV
+        function exportToCSV() {
+            if (records.length === 0) {
+                alert("Não há dados para exportação no momento.");
+                return;
+            }
+
+            // Cabeçalhos padrão nacional Excel com separador ponto e vírgula
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID;Data;Hora;Tipo de Batida;Observacao;Dia da Semana\n";
+
+            records.forEach(rec => {
+                const dateObj = new Date(rec.timestamp);
+                const formatDay = dateObj.toLocaleDateString('pt-BR');
+                const formatTime = dateObj.toLocaleTimeString('pt-BR');
+                const weekdayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+                const cleanNote = rec.note ? rec.note.replace(/;/g, ',') : '';
+
+                csvContent += `${rec.id};${formatDay};${formatTime};${rec.type};${cleanNote};${weekdayLabel}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Relatorio_PontoPro_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Loop de atualização constante a cada 30 segundos para manter os cálculos em tempo real atualizados
+        function initAutoCalculationsRefresh() {
+            setInterval(() => {
+                recalculateDashboard();
+            }, 30000);
+        }
+
+        // Ciclo de Inicialização da Aplicação ao abrir a janela
+        window.onload = function() {
+            initClock();
+            autoSuggestNextType();
+            updateCalculations();
+            renderHistory();
+            recalculateDashboard();
+            initAutoCalculationsRefresh();
+        };
+    </script>
+</body>
+</html>
